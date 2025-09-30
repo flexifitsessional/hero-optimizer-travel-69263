@@ -25,15 +25,9 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        sand: {
-          DEFAULT: "#E6B980",
-          light: "#EACDA3",
-        },
-        ocean: {
-          DEFAULT: "#33C3F0",
-          light: "#E7F0FD",
-        },
-        charcoal: "#403E43",
+        "fitness-green": "hsl(var(--fitness-green))",
+        "fitness-dark": "hsl(var(--fitness-dark))",
+        "fitness-light": "hsl(var(--fitness-light))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
