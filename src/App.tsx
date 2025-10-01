@@ -9,6 +9,9 @@ import GymSearch from "./pages/GymSearch";
 import GymDetails from "./pages/GymDetails";
 import MyBookings from "./pages/MyBookings";
 import Favorites from "./pages/Favorites";
+import GymOwner from "./pages/GymOwner";
+import AddGym from "./pages/AddGym";
+import GymStats from "./pages/GymStats";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +29,9 @@ const App = () => (
           <Route path="/gym/:id" element={<GymDetails />} />
           <Route path="/bookings" element={<MyBookings />} />
           <Route path="/favorites" element={<Favorites />} />
+          <Route path="/gym-owner" element={<GymOwner />} />
+          <Route path="/add-gym" element={<AddGym />} />
+          <Route path="/gym-stats/:id" element={<GymStats />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

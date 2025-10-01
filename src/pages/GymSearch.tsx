@@ -34,6 +34,25 @@ const GymSearch = () => {
     checkAuth();
   }, []);
 
+  useEffect(() => {
+    if (user) {
+      fetchUserFavorites();
+    }
+  }, [user]);
+
+  const fetchUserFavorites = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from("favorites")
+      .select("gym_id")
+      .eq("user_id", user.id);
+    
+    if (data) {
+      setFavorites(data.map(fav => fav.gym_id));
+    }
+  };
+
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     setUser(session?.user ?? null);
@@ -116,20 +135,20 @@ const GymSearch = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground p-6">
+      <div className="bg-navbar text-navbar-foreground p-6">
         <div className="max-w-7xl mx-auto">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/")}
-            className="mb-4 text-primary-foreground hover:bg-primary/80"
-          >
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/")}
+              className="mb-4 text-navbar-foreground hover:bg-navbar/80"
+            >
             <ArrowLeft className="mr-2" size={20} />
             Back
           </Button>
           <h1 className="text-3xl font-bold mb-2">Find Your Perfect Gym</h1>
-          <p className="text-primary-foreground/80">
-            Search and filter gyms based on location and price
-          </p>
+            <p className="text-navbar-foreground/80">
+              Search and filter gyms based on location and price
+            </p>
         </div>
       </div>
 
@@ -172,7 +191,7 @@ const GymSearch = () => {
           {filteredGyms.map((gym) => (
             <Card
               key={gym.id}
-              className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+              className="overflow-hidden hover:shadow-xl transition-all hover:scale-[1.02] cursor-pointer border-2 border-border hover:border-primary/50"
             >
               <div className="relative">
                 <img

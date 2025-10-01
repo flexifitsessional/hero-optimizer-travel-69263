@@ -28,6 +28,10 @@ export default {
         "fitness-green": "hsl(var(--fitness-green))",
         "fitness-dark": "hsl(var(--fitness-dark))",
         "fitness-light": "hsl(var(--fitness-light))",
+        navbar: {
+          DEFAULT: "hsl(var(--navbar))",
+          foreground: "hsl(var(--navbar-foreground))",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Dumbbell, MapPin, Star, Users } from "lucide-react";
 import ChromaticSmoke from "@/components/hero/ChromaticSmoke";
 
@@ -37,24 +38,27 @@ const Index = () => {
   return (
     <div className="relative">
       {/* Navigation */}
-      <nav className="absolute top-0 left-0 right-0 z-20 p-4 sm:p-6">
+      <nav className="absolute top-0 left-0 right-0 z-20 p-4 sm:p-6 bg-navbar/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="bg-primary rounded-lg p-2">
               <Dumbbell className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="text-white font-bold text-xl">FlexiFit</span>
+            <span className="text-navbar-foreground font-bold text-xl">FlexiFit</span>
           </div>
           <div className="flex gap-3">
             {user ? (
               <>
-                <Button onClick={() => navigate("/bookings")} variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                <Button onClick={() => navigate("/bookings")} variant="outline" className="bg-navbar-foreground/10 border-navbar-foreground/20 text-navbar-foreground hover:bg-navbar-foreground/20">
                   My Bookings
                 </Button>
-                <Button onClick={() => navigate("/favorites")} variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                <Button onClick={() => navigate("/favorites")} variant="outline" className="bg-navbar-foreground/10 border-navbar-foreground/20 text-navbar-foreground hover:bg-navbar-foreground/20">
                   Favorites
                 </Button>
-                <Button onClick={handleLogout} variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                <Button onClick={() => navigate("/gym-owner")} variant="outline" className="bg-navbar-foreground/10 border-navbar-foreground/20 text-navbar-foreground hover:bg-navbar-foreground/20">
+                  My Gyms
+                </Button>
+                <Button onClick={handleLogout} variant="outline" className="bg-navbar-foreground/10 border-navbar-foreground/20 text-navbar-foreground hover:bg-navbar-foreground/20">
                   Logout
                 </Button>
               </>
@@ -139,6 +143,101 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* About Us Section */}
+      <section className="py-20 px-4 bg-background">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-6">About FlexiFit</h2>
+          <p className="text-lg text-muted-foreground text-center max-w-3xl mx-auto mb-12">
+            FlexiFit revolutionizes the way you experience fitness. We believe in flexibility, affordability, and accessibility. 
+            No more long-term commitments or expensive memberships. Just pay per session and enjoy world-class gym facilities 
+            whenever and wherever you want.
+          </p>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center p-6 rounded-lg bg-card border">
+              <div className="text-4xl font-bold text-primary mb-2">500+</div>
+              <div className="text-muted-foreground">Partner Gyms</div>
+            </div>
+            <div className="text-center p-6 rounded-lg bg-card border">
+              <div className="text-4xl font-bold text-primary mb-2">10k+</div>
+              <div className="text-muted-foreground">Happy Members</div>
+            </div>
+            <div className="text-center p-6 rounded-lg bg-card border">
+              <div className="text-4xl font-bold text-primary mb-2">50k+</div>
+              <div className="text-muted-foreground">Sessions Booked</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20 px-4 bg-muted/30">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">What Our Users Say</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="p-6">
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-yellow-500 text-yellow-500" />
+                ))}
+              </div>
+              <p className="text-muted-foreground mb-4">
+                "FlexiFit changed my fitness journey completely! I can now workout at different gyms based on my location. 
+                The flexibility is unmatched!"
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <div className="font-semibold">Rahul Sharma</div>
+                  <div className="text-sm text-muted-foreground">Software Engineer</div>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-6">
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-yellow-500 text-yellow-500" />
+                ))}
+              </div>
+              <p className="text-muted-foreground mb-4">
+                "No more long-term commitments! I love how I can try different gyms and only pay for what I use. 
+                This is the future of fitness!"
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <div className="font-semibold">Priya Patel</div>
+                  <div className="text-sm text-muted-foreground">Entrepreneur</div>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-6">
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-yellow-500 text-yellow-500" />
+                ))}
+              </div>
+              <p className="text-muted-foreground mb-4">
+                "As someone who travels frequently, FlexiFit is a blessing. I can maintain my fitness routine 
+                no matter which city I'm in!"
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <div className="font-semibold">Arjun Mehta</div>
+                  <div className="text-sm text-muted-foreground">Digital Marketer</div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };

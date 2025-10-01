@@ -37,6 +37,9 @@
     --fitness-green: 142 76% 36%;
     --fitness-dark: 240 10% 3.9%;
     --fitness-light: 142 76% 96%;
+    
+    --navbar: 240 5% 15%;
+    --navbar-foreground: 0 0% 98%;
 
     --sidebar-background: 0 0% 98%;
 
@@ -87,6 +90,10 @@
     --fitness-green: 142 76% 36%;
     --fitness-dark: 240 10% 3.9%;
     --fitness-light: 142 76% 96%;
+    
+    --navbar: 240 5% 15%;
+    --navbar-foreground: 0 0% 98%;
+    
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
