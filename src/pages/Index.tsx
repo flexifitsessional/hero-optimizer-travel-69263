@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dumbbell, MapPin, Star, Users } from "lucide-react";
 import ChromaticSmoke from "@/components/hero/ChromaticSmoke";
-import GymSearch from "@/components/search/GymSearch";
 
 const Index = () => {
   const [loaded, setLoaded] = useState(false);
@@ -48,9 +47,17 @@ const Index = () => {
           </div>
           <div className="flex gap-3">
             {user ? (
-              <Button onClick={handleLogout} variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                Logout
-              </Button>
+              <>
+                <Button onClick={() => navigate("/bookings")} variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                  My Bookings
+                </Button>
+                <Button onClick={() => navigate("/favorites")} variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                  Favorites
+                </Button>
+                <Button onClick={handleLogout} variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                  Logout
+                </Button>
+              </>
             ) : (
               <Button onClick={() => navigate("/auth")} className="bg-primary hover:bg-primary/90">
                 Sign In
@@ -96,11 +103,17 @@ const Index = () => {
               No commitments. No long-term memberships. Just pay per session and enjoy flexible fitness.
             </p>
             
-            {/* Search Component */}
+            {/* Search Button */}
             <div className={`transform transition-all duration-700 delay-300 ${
               loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}>
-              <GymSearch />
+              <Button 
+                onClick={() => navigate("/search")}
+                size="lg"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-lg font-semibold rounded-xl shadow-lg"
+              >
+                Search for Gyms
+              </Button>
             </div>
             
             {/* Features */}
