@@ -58,10 +58,12 @@ const AddGym = () => {
     const { error } = await supabase.from("gyms").insert({
       owner_id: user.id,
       name: formData.name,
+      city: formData.location.split(",")[0].trim(),
+      state: formData.location.split(",")[1]?.trim() || "",
       location: formData.location,
       description: formData.description,
       price_per_session: parseFloat(formData.price_per_session),
-      image_url: formData.image_url,
+      image_url: formData.image_url || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
       contact_email: formData.contact_email,
       contact_phone: formData.contact_phone,
       amenities: amenitiesArray,

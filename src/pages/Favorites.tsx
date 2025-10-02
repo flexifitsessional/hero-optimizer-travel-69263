@@ -72,7 +72,9 @@ const Favorites = () => {
     setFavorites(gyms);
   };
 
-  const removeFavorite = async (gymId: string) => {
+  const removeFavorite = async (gymId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
     if (!user) return;
 
     const { error } = await supabase
@@ -143,10 +145,7 @@ const Favorites = () => {
                     variant="ghost"
                     size="icon"
                     className="absolute top-2 right-2 bg-white/80 hover:bg-white"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFavorite(gym.id);
-                    }}
+                    onClick={(e) => removeFavorite(gym.id, e)}
                   >
                     <Heart className="fill-red-500 text-red-500" size={20} />
                   </Button>

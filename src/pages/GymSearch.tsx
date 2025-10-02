@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, MapPin, DollarSign, Star, Heart } from "lucide-react";
+import { ArrowLeft, MapPin, DollarSign, Star, Heart, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Gym {
@@ -23,6 +23,7 @@ const GymSearch = () => {
   const [gyms, setGyms] = useState<Gym[]>([]);
   const [filteredGyms, setFilteredGyms] = useState<Gym[]>([]);
   const [location, setLocation] = useState("");
+  const [gymName, setGymName] = useState("");
   const [maxPrice, setMaxPrice] = useState([500]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
@@ -80,6 +81,12 @@ const GymSearch = () => {
   const handleFilter = () => {
     let filtered = gyms;
 
+    if (gymName) {
+      filtered = filtered.filter((gym) =>
+        gym.name.toLowerCase().includes(gymName.toLowerCase())
+      );
+    }
+
     if (location) {
       filtered = filtered.filter((gym) =>
         gym.location.toLowerCase().includes(location.toLowerCase())
@@ -91,13 +98,16 @@ const GymSearch = () => {
     setFilteredGyms(filtered);
   };
 
-  const toggleFavorite = async (gymId: string) => {
+  const toggleFavorite = async (gymId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
     if (!user) {
       toast({
         title: "Authentication Required",
         description: "Please sign in to add favorites",
         variant: "destructive",
       });
+      navigate("/auth");
       return;
     }
 
@@ -130,7 +140,7 @@ const GymSearch = () => {
 
   useEffect(() => {
     handleFilter();
-  }, [location, maxPrice]);
+  }, [location, gymName, maxPrice]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -156,7 +166,18 @@ const GymSearch = () => {
       <div className="max-w-7xl mx-auto p-6">
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  <Search className="inline mr-2" size={16} />
+                  Gym Name
+                </label>
+                <Input
+                  placeholder="Search by gym name"
+                  value={gymName}
+                  onChange={(e) => setGymName(e.target.value)}
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
                   <MapPin className="inline mr-2" size={16} />
@@ -203,13 +224,10 @@ const GymSearch = () => {
                   variant="ghost"
                   size="icon"
                   className="absolute top-2 right-2 bg-white/80 hover:bg-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFavorite(gym.id);
-                  }}
+                  onClick={(e) => toggleFavorite(gym.id, e)}
                 >
                   <Heart
-                    className={favorites.includes(gym.id) ? "fill-red-500 text-red-500" : ""}
+                    className={`transition-colors ${favorites.includes(gym.id) ? "fill-red-500 text-red-500" : ""}`}
                     size={20}
                   />
                 </Button>

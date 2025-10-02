@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, MapPin, Star, Calendar, CreditCard, Wallet } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, MapPin, Star, Calendar, CreditCard, Wallet, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Gym {
@@ -22,6 +23,16 @@ interface Gym {
   contact_phone: string;
 }
 
+interface Review {
+  id: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  profiles: {
+    id: string;
+  };
+}
+
 const GymDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -31,11 +42,15 @@ const GymDetails = () => {
   const [bookingDate, setBookingDate] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [showPayment, setShowPayment] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [showReviews, setShowReviews] = useState(false);
+  const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
 
   useEffect(() => {
     checkAuth();
     if (id) {
       fetchGymDetails();
+      fetchReviews();
     }
   }, [id]);
 
@@ -61,6 +76,63 @@ const GymDetails = () => {
     }
 
     setGym(data);
+  };
+
+  const fetchReviews = async () => {
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("*, profiles(id)")
+      .eq("gym_id", id)
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setReviews(data);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to leave a review",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    if (!newReview.comment.trim()) {
+      toast({
+        title: "Review Required",
+        description: "Please write a review before submitting",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await supabase.from("reviews").insert({
+      gym_id: id,
+      user_id: user.id,
+      rating: newReview.rating,
+      comment: newReview.comment,
+    });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit review",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Review Submitted",
+      description: "Thank you for your feedback!",
+    });
+
+    setNewReview({ rating: 5, comment: "" });
+    fetchReviews();
   };
 
   const handleBooking = async () => {
@@ -134,15 +206,23 @@ const GymDetails = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground p-6">
-        <div className="max-w-7xl mx-auto">
+      <div className="bg-navbar text-navbar-foreground p-6">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Button
             variant="ghost"
             onClick={() => navigate("/search")}
-            className="mb-4 text-primary-foreground hover:bg-primary/80"
+            className="text-navbar-foreground hover:bg-navbar/80"
           >
             <ArrowLeft className="mr-2" size={20} />
             Back to Search
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowReviews(true)}
+            className="bg-navbar-foreground/10 border-navbar-foreground/20 text-navbar-foreground hover:bg-navbar-foreground/20"
+          >
+            <MessageSquare className="mr-2" size={18} />
+            Reviews ({reviews.length})
           </Button>
         </div>
       </div>
@@ -276,6 +356,92 @@ const GymDetails = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Reviews Dialog */}
+      <Dialog open={showReviews} onOpenChange={setShowReviews}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Reviews & Ratings</DialogTitle>
+          </DialogHeader>
+          
+          {/* Submit Review */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Write a Review</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Rating</Label>
+                <div className="flex gap-2 mt-2">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <button
+                      key={rating}
+                      onClick={() => setNewReview({ ...newReview, rating })}
+                      className="transition-transform hover:scale-110"
+                    >
+                      <Star
+                        className={`w-8 h-8 ${
+                          rating <= newReview.rating
+                            ? "fill-yellow-500 text-yellow-500"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Label>Your Review</Label>
+                <Textarea
+                  value={newReview.comment}
+                  onChange={(e) =>
+                    setNewReview({ ...newReview, comment: e.target.value })
+                  }
+                  placeholder="Share your experience..."
+                  rows={4}
+                  className="mt-2"
+                />
+              </div>
+              <Button onClick={handleSubmitReview} className="w-full">
+                Submit Review
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Reviews List */}
+          <div className="space-y-4 mt-6">
+            <h3 className="font-semibold text-lg">All Reviews</h3>
+            {reviews.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                No reviews yet. Be the first to review!
+              </p>
+            ) : (
+              reviews.map((review) => (
+                <Card key={review.id}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-1 mb-2">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${
+                            i < review.rating
+                              ? "fill-yellow-500 text-yellow-500"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {new Date(review.created_at).toLocaleDateString()}
+                    </p>
+                    <p>{review.comment}</p>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
