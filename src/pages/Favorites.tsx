@@ -44,22 +44,12 @@ const Favorites = () => {
   };
 
   const fetchFavorites = async (userId: string) => {
-    const { data, error } = await supabase
+    const { data: favs, error: favError } = await supabase
       .from("favorites")
-      .select(`
-        gym:gyms (
-          id,
-          name,
-          location,
-          description,
-          price_per_session,
-          rating,
-          image_url
-        )
-      `)
+      .select("gym_id")
       .eq("user_id", userId);
 
-    if (error) {
+    if (favError) {
       toast({
         title: "Error",
         description: "Failed to load favorites",
@@ -68,8 +58,27 @@ const Favorites = () => {
       return;
     }
 
-    const gyms = data?.map((item: any) => item.gym).filter(Boolean) || [];
-    setFavorites(gyms);
+    const ids = (favs || []).map((f: any) => f.gym_id);
+    if (ids.length === 0) {
+      setFavorites([]);
+      return;
+    }
+
+    const { data: gyms, error: gymsError } = await supabase
+      .from("gyms")
+      .select("id, name, location, description, price_per_session, rating, image_url")
+      .in("id", ids);
+
+    if (gymsError) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch gyms",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setFavorites(gyms || []);
   };
 
   const removeFavorite = async (gymId: string, e: React.MouseEvent) => {

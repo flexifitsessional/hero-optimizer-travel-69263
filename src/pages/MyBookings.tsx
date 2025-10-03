@@ -21,7 +21,7 @@ import {
 interface Booking {
   id: string;
   booking_date: string;
-  payment_status: string;
+  payment_status?: string;
   status: string;
   gym: {
     name: string;
@@ -63,7 +63,6 @@ const MyBookings = () => {
       .select(`
         id,
         booking_date,
-        payment_status,
         status,
         gym:gyms (
           name,
@@ -191,8 +190,8 @@ const MyBookings = () => {
                       <Badge className={getStatusColor(booking.status)}>
                         {booking.status}
                       </Badge>
-                      <Badge className={getPaymentStatusColor(booking.payment_status)}>
-                        {booking.payment_status}
+                      <Badge className={getPaymentStatusColor(booking.payment_status ?? "paid")}>
+                        {booking.payment_status ?? "paid"}
                       </Badge>
                     </div>
                   </div>

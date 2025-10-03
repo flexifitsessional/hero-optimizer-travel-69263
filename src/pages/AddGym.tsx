@@ -15,6 +15,7 @@ const AddGym = () => {
   const [formData, setFormData] = useState({
     name: "",
     location: "",
+    address: "",
     description: "",
     price_per_session: "",
     image_url: "",
@@ -62,6 +63,7 @@ const AddGym = () => {
       city: formData.location.split(",")[0].trim(),
       state: formData.location.split(",")[1]?.trim() || "",
       location: formData.location,
+      address: formData.address,
       description: formData.description,
       price_per_session: parseFloat(formData.price_per_session),
       image_url: formData.image_url || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
@@ -213,6 +215,19 @@ const AddGym = () => {
                     required
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Address *
+                </label>
+                <Input
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Street, Area"
+                  required
+                />
               </div>
 
               <div>

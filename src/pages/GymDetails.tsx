@@ -28,9 +28,6 @@ interface Review {
   rating: number;
   comment: string;
   created_at: string;
-  profiles: {
-    id: string;
-  };
 }
 
 const GymDetails = () => {
@@ -136,7 +133,7 @@ const GymDetails = () => {
   const fetchReviews = async () => {
     const { data, error } = await supabase
       .from("reviews")
-      .select("*, profiles(id)")
+      .select("*")
       .eq("gym_id", id)
       .order("created_at", { ascending: false });
 
@@ -241,7 +238,6 @@ const GymDetails = () => {
       gym_id: id,
       booking_date: bookingDate,
       session_date: bookingDate,
-      payment_status: paymentMethod === "code" ? "paid" : "pending",
       status: "confirmed",
     });
 
