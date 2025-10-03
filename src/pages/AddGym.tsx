@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Upload, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const AddGym = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     location: "",
@@ -98,6 +99,67 @@ const AddGym = () => {
     });
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please select an image under 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `gym-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("gym_images")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("gym_images")
+        .getPublicUrl(filePath);
+
+      setFormData({
+        ...formData,
+        image_url: publicUrl,
+      });
+
+      toast({
+        title: "Image Uploaded",
+        description: "Your gym image has been uploaded successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to upload image",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -183,14 +245,48 @@ const AddGym = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Image URL
+                    Gym Image
                   </label>
-                  <Input
-                    name="image_url"
-                    value={formData.image_url}
-                    onChange={handleChange}
-                    placeholder="https://example.com/gym-image.jpg"
-                  />
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploading}
+                        className="hidden"
+                        id="image-upload"
+                      />
+                      <label
+                        htmlFor="image-upload"
+                        className="flex-1 cursor-pointer"
+                      >
+                        <div className="flex items-center justify-center gap-2 px-4 py-2 border border-input rounded-md hover:bg-accent transition-colors">
+                          {uploading ? (
+                            <Loader2 className="animate-spin" size={18} />
+                          ) : (
+                            <Upload size={18} />
+                          )}
+                          <span className="text-sm">
+                            {uploading ? "Uploading..." : "Upload Image"}
+                          </span>
+                        </div>
+                      </label>
+                    </div>
+                    <Input
+                      name="image_url"
+                      value={formData.image_url}
+                      onChange={handleChange}
+                      placeholder="Or paste image URL"
+                    />
+                    {formData.image_url && (
+                      <img
+                        src={formData.image_url}
+                        alt="Preview"
+                        className="w-full h-40 object-cover rounded-md"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
 

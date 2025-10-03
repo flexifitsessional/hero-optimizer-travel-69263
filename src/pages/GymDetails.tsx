@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, MapPin, Star, Calendar, CreditCard, Wallet, MessageSquare } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Calendar, CreditCard, Wallet, MessageSquare, Heart, Hash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Gym {
@@ -45,6 +45,8 @@ const GymDetails = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showReviews, setShowReviews] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
+  const [paymentCode, setPaymentCode] = useState("");
+  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -53,6 +55,59 @@ const GymDetails = () => {
       fetchReviews();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (user && id) {
+      checkFavoriteStatus();
+    }
+  }, [user, id]);
+
+  const checkFavoriteStatus = async () => {
+    if (!user || !id) return;
+    
+    const { data } = await supabase
+      .from("favorites")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("gym_id", id)
+      .single();
+    
+    setIsFavorite(!!data);
+  };
+
+  const toggleFavorite = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to add favorites",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    if (isFavorite) {
+      const { error } = await supabase
+        .from("favorites")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("gym_id", id);
+
+      if (!error) {
+        setIsFavorite(false);
+        toast({ title: "Removed from favorites" });
+      }
+    } else {
+      const { error } = await supabase
+        .from("favorites")
+        .insert({ user_id: user.id, gym_id: id });
+
+      if (!error) {
+        setIsFavorite(true);
+        toast({ title: "Added to favorites" });
+      }
+    }
+  };
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -168,12 +223,25 @@ const GymDetails = () => {
       return;
     }
 
+    // Verify code payment
+    if (paymentMethod === "code") {
+      if (paymentCode !== "123456") {
+        toast({
+          title: "Invalid Code",
+          description: "Please enter the correct payment code",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     // Create booking
     const { error } = await supabase.from("bookings").insert({
       user_id: user.id,
       gym_id: id,
       booking_date: bookingDate,
-      payment_status: "pending",
+      session_date: bookingDate,
+      payment_status: paymentMethod === "code" ? "paid" : "pending",
       status: "confirmed",
     });
 
@@ -188,10 +256,12 @@ const GymDetails = () => {
 
     toast({
       title: "Booking Successful!",
-      description: "Your session has been booked. Payment pending.",
+      description: paymentMethod === "code" ? "Your session has been booked and paid!" : "Your session has been booked. Payment pending.",
     });
 
     setShowPayment(false);
+    setPaymentCode("");
+    setPaymentMethod("");
     navigate("/bookings");
   };
 
@@ -216,14 +286,27 @@ const GymDetails = () => {
             <ArrowLeft className="mr-2" size={20} />
             Back to Search
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => setShowReviews(true)}
-            className="bg-navbar-foreground/10 border-navbar-foreground/20 text-navbar-foreground hover:bg-navbar-foreground/20"
-          >
-            <MessageSquare className="mr-2" size={18} />
-            Reviews ({reviews.length})
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={toggleFavorite}
+              className="bg-navbar-foreground/10 border-navbar-foreground/20 text-navbar-foreground hover:bg-navbar-foreground/20"
+            >
+              <Heart 
+                className={`mr-2 ${isFavorite ? "fill-red-500 text-red-500" : ""}`} 
+                size={18} 
+              />
+              {isFavorite ? "Saved" : "Save"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowReviews(true)}
+              className="bg-navbar-foreground/10 border-navbar-foreground/20 text-navbar-foreground hover:bg-navbar-foreground/20"
+            >
+              <MessageSquare className="mr-2" size={18} />
+              Reviews ({reviews.length})
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -343,11 +426,36 @@ const GymDetails = () => {
                       Net Banking
                     </Button>
                     <Button
+                      variant={paymentMethod === "code" ? "default" : "outline"}
+                      className="w-full justify-start"
+                      onClick={() => setPaymentMethod("code")}
+                    >
+                      <Hash className="mr-2" size={20} />
+                      Payment Code (Test Mode)
+                    </Button>
+                    
+                    {paymentMethod === "code" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="payment-code">Enter Payment Code</Label>
+                        <Input
+                          id="payment-code"
+                          type="text"
+                          placeholder="Enter code: 123456"
+                          value={paymentCode}
+                          onChange={(e) => setPaymentCode(e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Test code: 123456
+                        </p>
+                      </div>
+                    )}
+                    
+                    <Button
                       onClick={handlePayment}
                       className="w-full"
                       disabled={!paymentMethod}
                     >
-                      Proceed to Payment
+                      {paymentMethod === "code" ? "Verify Code & Book" : "Proceed to Payment"}
                     </Button>
                   </div>
                 </DialogContent>
