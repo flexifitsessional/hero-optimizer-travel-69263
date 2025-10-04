@@ -3,8 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Plus, TrendingUp, Users, Calendar } from "lucide-react";
+import { ArrowLeft, Plus, TrendingUp, Users, Calendar, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface OwnedGym {
   id: string;
@@ -68,6 +79,33 @@ const GymOwner = () => {
     })) || [];
 
     setOwnedGyms(gymsWithCount);
+  };
+
+  const deleteGym = async (gymId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    const { error } = await supabase
+      .from("gyms")
+      .delete()
+      .eq("id", gymId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete gym",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Success",
+      description: "Gym deleted successfully",
+    });
+
+    if (user) {
+      fetchOwnedGyms(user.id);
+    }
   };
 
   return (
@@ -157,16 +195,45 @@ const GymOwner = () => {
                 >
                   <CardContent className="p-6">
                     <div className="flex justify-between items-center">
-                      <div>
+                      <div className="flex-1">
                         <h3 className="font-bold text-xl mb-1">{gym.name}</h3>
                         <p className="text-muted-foreground">{gym.location}</p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right mr-4">
                         <div className="text-2xl font-bold text-primary">
                           {gym.bookings_count}
                         </div>
                         <div className="text-sm text-muted-foreground">Total Bookings</div>
                       </div>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:bg-destructive/10"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Gym</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{gym.name}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={(e) => deleteGym(gym.id, e)}
+                              className="bg-destructive hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </CardContent>
                 </Card>

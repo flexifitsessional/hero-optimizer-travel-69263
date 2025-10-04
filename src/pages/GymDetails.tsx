@@ -233,18 +233,17 @@ const GymDetails = () => {
     }
 
     // Create booking
-    const { error } = await supabase.from("bookings").insert({
+    const { error: bookingError } = await supabase.from("bookings").insert({
       user_id: user.id,
       gym_id: id,
       booking_date: bookingDate,
-      session_date: bookingDate,
       status: "confirmed",
     });
 
-    if (error) {
+    if (bookingError) {
       toast({
         title: "Booking Failed",
-        description: error.message,
+        description: bookingError.message,
         variant: "destructive",
       });
       return;

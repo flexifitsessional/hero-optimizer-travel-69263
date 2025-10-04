@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X, Heart, Calendar, Dumbbell, Info, History } from "lucide-react";
 import { Button } from "./button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./sheet";
@@ -11,7 +11,26 @@ interface HamburgerMenuProps {
 
 export function HamburgerMenu({ user }: HamburgerMenuProps) {
   const [open, setOpen] = useState(false);
+  const [isGymOwner, setIsGymOwner] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    checkIfGymOwner();
+  }, [user]);
+
+  const checkIfGymOwner = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from("gyms")
+      .select("id")
+      .eq("owner_id", user.id)
+      .limit(1);
+
+    if (!error && data && data.length > 0) {
+      setIsGymOwner(true);
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -22,7 +41,7 @@ export function HamburgerMenu({ user }: HamburgerMenuProps) {
   const menuItems = [
     { icon: Calendar, label: "My Bookings", path: "/bookings" },
     { icon: Heart, label: "Favorites", path: "/favorites" },
-    { icon: Dumbbell, label: "My Gyms", path: "/gym-owner" },
+    ...(isGymOwner ? [{ icon: Dumbbell, label: "My Gyms", path: "/gym-owner" }] : []),
     { icon: History, label: "Booking History", path: "/booking-history" },
     { icon: Info, label: "About Us", action: () => {
       setOpen(false);
