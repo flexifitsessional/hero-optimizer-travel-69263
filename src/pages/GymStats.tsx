@@ -61,7 +61,7 @@ const GymStats = () => {
 
     const { data: bookingsData, error: bookingsError } = await supabase
       .from("bookings")
-      .select("status, session_date")
+      .select("status, booking_date")
       .eq("gym_id", gymId);
 
     if (bookingsError) {
@@ -74,11 +74,11 @@ const GymStats = () => {
     }
 
     const todayBookings = bookingsData.filter(
-      (b) => b.session_date?.split("T")[0] === today
+      (b: any) => b.booking_date?.split("T")[0] === today
     ).length;
 
     const weekBookings = bookingsData.filter(
-      (b) => b.session_date && b.session_date.split("T")[0] >= weekAgo
+      (b: any) => b.booking_date && b.booking_date.split("T")[0] >= weekAgo
     ).length;
 
     const statusCounts = bookingsData.reduce((acc: any, booking) => {

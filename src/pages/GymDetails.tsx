@@ -233,14 +233,23 @@ const GymDetails = () => {
       }
     }
 
+    // Compute end_time as 1 hour after start_time
+    const [sh, sm] = bookingTime.split(":").map(Number);
+    const end = new Date(0, 0, 0, sh, sm);
+    end.setMinutes(end.getMinutes() + 60);
+    const end_time = end.toTimeString().slice(0, 5);
+
     // Create booking
-    const { error: bookingError } = await supabase.from("bookings").insert({
-      user_id: user.id,
-      gym_id: id,
-      booking_date: bookingDate,
-      start_time: bookingTime,
-      status: "confirmed",
-    });
+    const { error: bookingError } = await supabase
+      .from("bookings")
+      .insert({
+        user_id: user.id,
+        gym_id: id,
+        booking_date: bookingDate,
+        start_time: bookingTime,
+        end_time,
+        status: "confirmed",
+      });
 
     if (bookingError) {
       toast({
@@ -253,7 +262,10 @@ const GymDetails = () => {
 
     toast({
       title: "Booking Successful!",
-      description: paymentMethod === "code" ? "Your session has been booked and paid!" : "Your session has been booked. Payment pending.",
+      description:
+        paymentMethod === "code"
+          ? "Your session has been booked and paid!"
+          : "Your session has been booked. Payment pending.",
     });
 
     setShowPayment(false);
