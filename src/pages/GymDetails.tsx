@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,6 +37,7 @@ const GymDetails = () => {
   const [gym, setGym] = useState<Gym | null>(null);
   const [user, setUser] = useState<any>(null);
   const [bookingDate, setBookingDate] = useState("");
+  const [bookingTime, setBookingTime] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [showPayment, setShowPayment] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -198,10 +199,10 @@ const GymDetails = () => {
       return;
     }
 
-    if (!bookingDate) {
+    if (!bookingDate || !bookingTime) {
       toast({
-        title: "Date Required",
-        description: "Please select a booking date",
+        title: "Date & Time Required",
+        description: "Please select a booking date and time",
         variant: "destructive",
       });
       return;
@@ -237,6 +238,7 @@ const GymDetails = () => {
       user_id: user.id,
       gym_id: id,
       booking_date: bookingDate,
+      start_time: bookingTime,
       status: "confirmed",
     });
 
@@ -385,6 +387,18 @@ const GymDetails = () => {
                 </div>
               </div>
 
+              <div>
+                <Label htmlFor="time">Select Time</Label>
+                <div className="relative mt-2">
+                  <Input
+                    id="time"
+                    type="time"
+                    value={bookingTime}
+                    onChange={(e) => setBookingTime(e.target.value)}
+                  />
+                </div>
+              </div>
+
               <Dialog open={showPayment} onOpenChange={setShowPayment}>
                 <DialogTrigger asChild>
                   <Button onClick={handleBooking} className="w-full" size="lg">
@@ -394,6 +408,7 @@ const GymDetails = () => {
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Select Payment Method</DialogTitle>
+                    <DialogDescription>Choose a method to complete your booking.</DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
                     <Button
@@ -465,6 +480,7 @@ const GymDetails = () => {
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Reviews & Ratings</DialogTitle>
+            <DialogDescription>Read and submit reviews for this gym.</DialogDescription>
           </DialogHeader>
           
           {/* Submit Review */}
