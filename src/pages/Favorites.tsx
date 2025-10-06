@@ -81,7 +81,7 @@ const Favorites = () => {
     setFavorites(gyms || []);
   };
 
-  const removeFavorite = async (gymId: string, e: React.MouseEvent) => {
+  const removeFavorite = async (gymId: string, e: any) => {
     e.stopPropagation();
     
     if (!user) return;

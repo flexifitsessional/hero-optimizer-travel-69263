@@ -68,7 +68,7 @@ const GymDetails = () => {
       .select("id")
       .eq("user_id", user.id)
       .eq("gym_id", id)
-      .single();
+      .maybeSingle();
     
     setIsFavorite(!!data);
   };
@@ -248,6 +248,7 @@ const GymDetails = () => {
         booking_date: bookingDate,
         start_time: bookingTime,
         end_time,
+        amount_paid: paymentMethod === "code" ? gym.price_per_session : 0,
         status: "confirmed",
       });
 
