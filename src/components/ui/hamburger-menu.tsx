@@ -19,7 +19,12 @@ export function HamburgerMenu({ user }: HamburgerMenuProps) {
   }, [user]);
 
   const checkIfGymOwner = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log("No user found in checkIfGymOwner");
+      return;
+    }
+    
+    console.log("Checking if user is gym owner:", user.id);
     
     const { data, error } = await supabase
       .from("gyms")
@@ -27,8 +32,12 @@ export function HamburgerMenu({ user }: HamburgerMenuProps) {
       .eq("owner_id", user.id)
       .limit(1);
 
+    console.log("Gym owner check result:", { data, error, isOwner: data && data.length > 0 });
+
     if (!error && data && data.length > 0) {
       setIsGymOwner(true);
+    } else {
+      setIsGymOwner(false);
     }
   };
 
