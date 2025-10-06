@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, TrendingUp, DollarSign, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
@@ -21,10 +23,20 @@ interface BookingStats {
   status_breakdown: { status: string; count: number }[];
 }
 
+interface BookingDetail {
+  id: string;
+  booking_date: string;
+  time_slot: string;
+  status: string;
+  user_name: string;
+  user_email: string;
+}
+
 const GymStats = () => {
   const { id } = useParams();
   const [gym, setGym] = useState<GymDetails | null>(null);
   const [stats, setStats] = useState<BookingStats | null>(null);
+  const [bookings, setBookings] = useState<BookingDetail[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -61,8 +73,20 @@ const GymStats = () => {
 
     const { data: bookingsData, error: bookingsError } = await supabase
       .from("bookings")
-      .select("status, booking_date")
-      .eq("gym_id", gymId);
+      .select(`
+        id,
+        status,
+        booking_date,
+        time_slot,
+        user_id,
+        profiles:user_id (
+          first_name,
+          last_name,
+          email
+        )
+      `)
+      .eq("gym_id", gymId)
+      .order("booking_date", { ascending: false });
 
     if (bookingsError) {
       toast({
@@ -99,6 +123,33 @@ const GymStats = () => {
       total_revenue: bookingsData.length * (gymData.price_per_session || 0),
       status_breakdown: statusBreakdown,
     });
+
+    // Format bookings for display
+    const formattedBookings = bookingsData.map((booking: any) => ({
+      id: booking.id,
+      booking_date: booking.booking_date,
+      time_slot: booking.time_slot || "N/A",
+      status: booking.status || "pending",
+      user_name: booking.profiles
+        ? `${booking.profiles.first_name || ""} ${booking.profiles.last_name || ""}`.trim() || "Unknown"
+        : "Unknown",
+      user_email: booking.profiles?.email || "N/A",
+    }));
+
+    setBookings(formattedBookings);
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case "confirmed":
+        return "default";
+      case "completed":
+        return "secondary";
+      case "cancelled":
+        return "destructive";
+      default:
+        return "outline";
+    }
   };
 
   const COLORS = ["#10b981", "#f59e0b", "#ef4444", "#6366f1"];
@@ -164,7 +215,7 @@ const GymStats = () => {
         </div>
 
         {/* Booking Status Chart */}
-        <Card>
+        <Card className="mb-8">
           <CardHeader>
             <CardTitle>Booking Status Breakdown</CardTitle>
           </CardHeader>
@@ -192,6 +243,49 @@ const GymStats = () => {
             ) : (
               <div className="text-center py-12 text-muted-foreground">
                 No booking data available yet
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Bookings List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>All Bookings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {bookings.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Time Slot</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {bookings.map((booking) => (
+                    <TableRow key={booking.id}>
+                      <TableCell className="font-medium">{booking.user_name}</TableCell>
+                      <TableCell>{booking.user_email}</TableCell>
+                      <TableCell>
+                        {new Date(booking.booking_date).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>{booking.time_slot}</TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeVariant(booking.status)}>
+                          {booking.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                No bookings yet
               </div>
             )}
           </CardContent>
