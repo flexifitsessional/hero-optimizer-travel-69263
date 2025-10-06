@@ -50,7 +50,7 @@ export function HamburgerMenu({ user }: HamburgerMenuProps) {
   const menuItems = [
     { icon: Calendar, label: "My Bookings", path: "/bookings" },
     { icon: Heart, label: "Favorites", path: "/favorites" },
-    ...(isGymOwner ? [{ icon: Dumbbell, label: "My Gyms", path: "/gym-owner" }] : []),
+    ...(user ? [{ icon: Dumbbell, label: "My Gyms", path: "/gym-owner" }] : []),
     { icon: History, label: "Booking History", path: "/booking-history" },
     { icon: Info, label: "About Us", action: () => {
       setOpen(false);
