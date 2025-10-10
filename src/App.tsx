@@ -13,6 +13,7 @@ import GymOwner from "./pages/GymOwner";
 import AddGym from "./pages/AddGym";
 import GymStats from "./pages/GymStats";
 import BookingHistory from "./pages/BookingHistory";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/add-gym" element={<AddGym />} />
           <Route path="/gym-stats/:id" element={<GymStats />} />
           <Route path="/booking-history" element={<BookingHistory />} />
+          <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

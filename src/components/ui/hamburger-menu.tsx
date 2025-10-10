@@ -163,6 +163,17 @@ export function HamburgerMenu({ user }: HamburgerMenuProps) {
                 <p className="text-sm text-muted-foreground">Last Sign In</p>
                 <p className="font-medium">{profileData.lastSignIn}</p>
               </div>
+              <div className="pt-4">
+                <Button 
+                  className="w-full" 
+                  onClick={() => {
+                    setProfileOpen(false);
+                    navigate("/profile");
+                  }}
+                >
+                  Edit Profile
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
