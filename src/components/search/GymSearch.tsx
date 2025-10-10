@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 const GymSearch = () => {
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState("Indore");
   const [date, setDate] = useState("");
 
   const handleSearch = () => {
