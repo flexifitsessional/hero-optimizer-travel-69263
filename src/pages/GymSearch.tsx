@@ -33,6 +33,20 @@ const GymSearch = () => {
   useEffect(() => {
     fetchGyms();
     checkAuth();
+    
+    // Update all gym locations to Indore on mount
+    const updateLocations = async () => {
+      const { data, error } = await supabase
+        .from('gyms')
+        .update({ location: 'Indore' })
+        .neq('location', 'Indore');
+      
+      if (!error) {
+        console.log('Updated gym locations to Indore');
+        fetchGyms(); // Refresh the gym list
+      }
+    };
+    updateLocations();
   }, []);
 
   useEffect(() => {
