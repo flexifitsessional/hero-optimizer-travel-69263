@@ -5,12 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import GymSearch from "./pages/GymSearch";
 import GymDetails from "./pages/GymDetails";
 import MyBookings from "./pages/MyBookings";
 import Favorites from "./pages/Favorites";
 import GymOwner from "./pages/GymOwner";
 import AddGym from "./pages/AddGym";
+import ManageGym from "./pages/ManageGym";
 import GymStats from "./pages/GymStats";
 import BookingHistory from "./pages/BookingHistory";
 import Profile from "./pages/Profile";
@@ -27,12 +29,14 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/search" element={<GymSearch />} />
           <Route path="/gym/:id" element={<GymDetails />} />
           <Route path="/bookings" element={<MyBookings />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/gym-owner" element={<GymOwner />} />
           <Route path="/add-gym" element={<AddGym />} />
+          <Route path="/manage-gym/:id" element={<ManageGym />} />
           <Route path="/gym-stats/:id" element={<GymStats />} />
           <Route path="/booking-history" element={<BookingHistory />} />
           <Route path="/profile" element={<Profile />} />

@@ -1,2 +1,5 @@
 [functions.send-password-reset]
 verify_jwt = false
+
+[functions.send-otp]
+verify_jwt = false

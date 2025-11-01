@@ -81,31 +81,42 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?reset=true`,
+      // Generate 6-digit OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + 10); // OTP valid for 10 minutes
+
+      // Store OTP in database
+      const { error: dbError } = await supabase
+        .from("password_reset_otps")
+        .insert({
+          email,
+          otp,
+          expires_at: expiresAt.toISOString(),
+          used: false,
+        });
+
+      if (dbError) throw dbError;
+
+      // Send OTP via email
+      const { error: emailError } = await supabase.functions.invoke("send-otp", {
+        body: { email, otp },
       });
 
-      if (error) throw error;
-
-      // Send custom email via edge function
-      const { data: { session } } = await supabase.auth.getSession();
-      const resetLink = `${window.location.origin}/auth?reset=true`;
-      
-      await supabase.functions.invoke("send-password-reset", {
-        body: { email, resetLink },
-      });
+      if (emailError) throw emailError;
 
       toast({
-        title: "Check your email!",
-        description: "We've sent you a password reset link.",
+        title: "OTP Sent!",
+        description: "Check your email for the verification code.",
       });
-      setIsForgotPassword(false);
-      setEmail("");
+      
+      // Redirect to reset password page with email
+      navigate(`/reset-password?email=${encodeURIComponent(email)}`);
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to send OTP",
       });
     } finally {
       setLoading(false);

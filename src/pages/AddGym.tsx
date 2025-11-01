@@ -348,6 +348,20 @@ const AddGym = () => {
                 </p>
               </div>
 
+              <div className="space-y-4 pt-4 border-t">
+                <h3 className="text-lg font-semibold">Trainers</h3>
+                <p className="text-sm text-muted-foreground">
+                  You can add trainers after creating the gym
+                </p>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t">
+                <h3 className="text-lg font-semibold">Time Slots</h3>
+                <p className="text-sm text-muted-foreground">
+                  You can configure time slots after creating the gym
+                </p>
+              </div>
+
               <Button
                 type="submit"
                 className="w-full bg-primary hover:bg-primary/90"

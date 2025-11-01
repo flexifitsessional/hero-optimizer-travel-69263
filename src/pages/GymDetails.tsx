@@ -7,8 +7,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, MapPin, Star, Calendar, CreditCard, Wallet, MessageSquare, Heart, Hash } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, MapPin, Star, Calendar, CreditCard, Wallet, MessageSquare, Heart, Hash, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { TrainerManager } from "@/components/gym/TrainerManager";
+import { TimeSlotManager } from "@/components/gym/TimeSlotManager";
 
 interface Gym {
   id: string;
@@ -30,6 +33,14 @@ interface Review {
   created_at: string;
 }
 
+interface TimeSlot {
+  id: string;
+  start_time: string;
+  end_time: string;
+  max_capacity: number;
+  current_bookings?: number;
+}
+
 const GymDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -37,7 +48,8 @@ const GymDetails = () => {
   const [gym, setGym] = useState<Gym | null>(null);
   const [user, setUser] = useState<any>(null);
   const [bookingDate, setBookingDate] = useState("");
-  const [bookingTime, setBookingTime] = useState("");
+  const [selectedSlotId, setSelectedSlotId] = useState("");
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [showPayment, setShowPayment] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -51,8 +63,15 @@ const GymDetails = () => {
     if (id) {
       fetchGymDetails();
       fetchReviews();
+      fetchTimeSlots();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (bookingDate && id) {
+      fetchTimeSlotsWithAvailability();
+    }
+  }, [bookingDate, id]);
 
   useEffect(() => {
     if (user && id) {
@@ -143,6 +162,49 @@ const GymDetails = () => {
     }
   };
 
+  const fetchTimeSlots = async () => {
+    const { data, error } = await supabase
+      .from("time_slots")
+      .select("*")
+      .eq("gym_id", id)
+      .order("start_time", { ascending: true });
+
+    if (!error && data) {
+      setTimeSlots(data);
+    }
+  };
+
+  const fetchTimeSlotsWithAvailability = async () => {
+    if (!bookingDate) return;
+
+    const { data, error } = await supabase
+      .from("time_slots")
+      .select("*")
+      .eq("gym_id", id)
+      .order("start_time", { ascending: true });
+
+    if (error || !data) return;
+
+    // Get booking counts for each slot on the selected date
+    const slotsWithAvailability = await Promise.all(
+      data.map(async (slot) => {
+        const { count } = await supabase
+          .from("bookings")
+          .select("*", { count: "exact", head: true })
+          .eq("time_slot_id", slot.id)
+          .eq("booking_date", bookingDate)
+          .eq("status", "confirmed");
+
+        return {
+          ...slot,
+          current_bookings: count || 0,
+        };
+      })
+    );
+
+    setTimeSlots(slotsWithAvailability);
+  };
+
   const handleSubmitReview = async () => {
     if (!user) {
       toast({
@@ -199,10 +261,21 @@ const GymDetails = () => {
       return;
     }
 
-    if (!bookingDate || !bookingTime) {
+    if (!bookingDate || !selectedSlotId) {
       toast({
         title: "Date & Time Required",
-        description: "Please select a booking date and time",
+        description: "Please select a booking date and time slot",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if slot is full
+    const selectedSlot = timeSlots.find((s) => s.id === selectedSlotId);
+    if (selectedSlot && selectedSlot.current_bookings! >= selectedSlot.max_capacity) {
+      toast({
+        title: "Slot Full",
+        description: "This time slot is fully booked. Please select another time.",
         variant: "destructive",
       });
       return;
@@ -233,22 +306,21 @@ const GymDetails = () => {
       }
     }
 
-    // Compute end_time as 1 hour after start_time
-    const [sh, sm] = bookingTime.split(":").map(Number);
-    const end = new Date(0, 0, 0, sh, sm);
-    end.setMinutes(end.getMinutes() + 60);
-    const end_time = end.toTimeString().slice(0, 5);
+    const selectedSlot = timeSlots.find((s) => s.id === selectedSlotId);
+    if (!selectedSlot) return;
 
-    // Create booking
+    // Create booking with time slot
     const { error: bookingError } = await supabase
       .from("bookings")
       .insert({
         user_id: user.id,
         gym_id: id,
         booking_date: bookingDate,
-        start_time: bookingTime,
-        end_time,
-        amount_paid: paymentMethod === "code" ? gym.price_per_session : 0,
+        time_slot_id: selectedSlotId,
+        booking_time: selectedSlot.start_time,
+        start_time: selectedSlot.start_time,
+        end_time: selectedSlot.end_time,
+        amount_paid: paymentMethod === "code" ? gym?.price_per_session : 0,
         status: "confirmed",
       });
 
@@ -272,6 +344,7 @@ const GymDetails = () => {
     setShowPayment(false);
     setPaymentCode("");
     setPaymentMethod("");
+    setSelectedSlotId("");
     navigate("/bookings");
   };
 
@@ -378,6 +451,16 @@ const GymDetails = () => {
           </CardContent>
         </Card>
 
+        {/* Trainers Section */}
+        <div className="mb-6">
+          <TrainerManager gymId={id!} canEdit={false} />
+        </div>
+
+        {/* Time Slots Section */}
+        <div className="mb-6">
+          <TimeSlotManager gymId={id!} canEdit={false} />
+        </div>
+
         {/* Booking Section */}
         <Card>
           <CardHeader>
@@ -401,14 +484,46 @@ const GymDetails = () => {
               </div>
 
               <div>
-                <Label htmlFor="time">Select Time</Label>
-                <div className="relative mt-2">
-                  <Input
-                    id="time"
-                    type="time"
-                    value={bookingTime}
-                    onChange={(e) => setBookingTime(e.target.value)}
-                  />
+                <Label htmlFor="time-slot">Select Time Slot</Label>
+                <div className="mt-2">
+                  {bookingDate ? (
+                    timeSlots.length > 0 ? (
+                      <Select value={selectedSlotId} onValueChange={setSelectedSlotId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose a time slot" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {timeSlots.map((slot) => {
+                            const isFull = slot.current_bookings! >= slot.max_capacity;
+                            return (
+                              <SelectItem
+                                key={slot.id}
+                                value={slot.id}
+                                disabled={isFull}
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span>
+                                    {slot.start_time} - {slot.end_time}
+                                  </span>
+                                  <span className={`text-xs ml-4 ${isFull ? "text-destructive" : "text-muted-foreground"}`}>
+                                    {isFull ? "Full" : `${slot.current_bookings}/${slot.max_capacity} booked`}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No time slots available for this gym
+                      </p>
+                    )
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Please select a date first
+                    </p>
+                  )}
                 </div>
               </div>
 
